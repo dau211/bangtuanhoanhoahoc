@@ -62,6 +62,64 @@ const ExternalLinkButton: React.FC<{ href: string; label: string; icon?: React.R
     </a>
 );
 
+// Hàm tiện ích để format văn bản hóa học (chỉ số dưới, chỉ số trên)
+// Ví dụ: H2O -> H₂O, Fe3+ -> Fe³⁺
+const formatChemicalText = (text: string | null | undefined): React.ReactNode => {
+    if (!text) return "Đang cập nhật...";
+
+    // Helper xử lý regex và trả về mảng nodes
+    const replaceWithJSX = (
+        nodes: (string | React.ReactElement)[],
+        regex: RegExp,
+        replacer: (match: RegExpMatchArray, index: number) => React.ReactElement
+    ): (string | React.ReactElement)[] => {
+        return nodes.flatMap((node) => {
+            if (typeof node !== 'string') return node;
+
+            const result: (string | React.ReactElement)[] = [];
+            let lastIndex = 0;
+            const matches = [...node.matchAll(regex)];
+
+            if (matches.length === 0) return node;
+
+            matches.forEach((match, i) => {
+                if (match.index !== undefined && match.index > lastIndex) {
+                    result.push(node.substring(lastIndex, match.index));
+                }
+                result.push(replacer(match, i));
+                lastIndex = (match.index || 0) + match[0].length;
+            });
+
+            if (lastIndex < node.length) {
+                result.push(node.substring(lastIndex));
+            }
+
+            return result;
+        });
+    };
+
+    let nodes: (string | React.ReactElement)[] = [text];
+
+    // 1. Xử lý Chỉ số trên (Ion/Điện tích) TRƯỚC: Ví dụ Fe3+, Cl-, Na+, O2-
+    // Regex: Ký hiệu hóa học (Viết hoa + thường?) + Số (tùy chọn) + Dấu (+ hoặc -)
+    // (?=\s|[.,;:\)]|$) là lookahead để đảm bảo nó ở cuối từ/công thức
+    nodes = replaceWithJSX(nodes, /([A-Z][a-z]?)(\d*[\+\-])(?=\s|[.,;:\)]|$)/g, (match, i) => (
+        <span key={`sup-${i}`} className="whitespace-nowrap">
+            {match[1]}<sup>{match[2]}</sup>
+        </span>
+    ));
+
+    // 2. Xử lý Chỉ số dưới (Số lượng nguyên tử): Ví dụ H2, O3, C6, )2
+    // Regex: Ký hiệu hóa học HOẶC dấu đóng ngoặc + Số
+    nodes = replaceWithJSX(nodes, /([A-Z][a-z]?|\))(\d+)/g, (match, i) => (
+        <span key={`sub-${i}`} className="whitespace-nowrap">
+            {match[1]}<sub>{match[2]}</sub>
+        </span>
+    ));
+
+    return <>{nodes}</>;
+};
+
 
 const ElementDetails: React.FC<ElementDetailsProps> = ({ element, onClose, onSave }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -337,9 +395,9 @@ const ElementDetails: React.FC<ElementDetailsProps> = ({ element, onClose, onSav
                                                     <span className="font-semibold text-cyan-300">Trạng thái (STP): </span>
                                                     {getPhaseVietnamese(element.phase)}
                                                 </p>
-                                                <p className="text-gray-300 mt-2 text-sm leading-relaxed whitespace-pre-line animate-fade-in">
-                                                    {element.naturalOccurrence || "Đang cập nhật..."}
-                                                </p>
+                                                <div className="text-gray-300 mt-2 text-sm leading-relaxed whitespace-pre-line animate-fade-in">
+                                                    {formatChemicalText(element.naturalOccurrence)}
+                                                </div>
                                             </div>
                                         </div>
                                         <div>
@@ -350,9 +408,9 @@ const ElementDetails: React.FC<ElementDetailsProps> = ({ element, onClose, onSav
                                                 <h4 className="font-bold text-lg text-white">Ứng dụng</h4>
                                             </div>
                                             <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-600 min-h-[100px] h-full relative">
-                                                <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line animate-fade-in">
-                                                    {element.applications || "Đang cập nhật..."}
-                                                </p>
+                                                <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-line animate-fade-in">
+                                                    {formatChemicalText(element.applications)}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
