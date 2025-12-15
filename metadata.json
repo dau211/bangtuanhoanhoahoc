@@ -1,5 +1,5 @@
 {
-  "name": "Bảng Tuần Hoàn Hóa Học Tương Tác PB8",
+  "name": "Copy of Bảng Tuần Hoàn Hóa Học Tương Tác PB9 - Bản chính",
   "description": "Một ứng dụng web bảng tuần hoàn hóa học tương tác được xây dựng bằng React và Tailwind CSS. Người dùng có thể nhấp vào một nguyên tố để xem thông tin chi tiết và tìm kiếm nguyên tố bằng giọng nói.",
   "requestFramePermissions": [
     "microphone"
