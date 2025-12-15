@@ -8,7 +8,8 @@ interface ElementDetailsProps {
   onSave: (element: ElementData) => void;
 }
 
-const DetailItem: React.FC<{ label: string; value: string | number | null; unit?: string }> = ({ label, value, unit }) => {
+// Cập nhật type của value thành React.ReactNode để hỗ trợ hiển thị HTML (chỉ số trên/dưới)
+const DetailItem: React.FC<{ label: string; value: React.ReactNode; unit?: string }> = ({ label, value, unit }) => {
     const displayValue = value === null || value === undefined || value === '' ? 'N/A' : value;
     return (
         <div className="py-1 flex justify-between items-baseline gap-2">
@@ -120,6 +121,30 @@ const formatChemicalText = (text: string | null | undefined): React.ReactNode =>
     return <>{nodes}</>;
 };
 
+// Hàm format cấu hình electron: 1s2 2s2 -> 1s² 2s²
+const formatElectronConfiguration = (text: string | null | undefined): React.ReactNode => {
+    if (!text) return "N/A";
+
+    // Regex tìm kiếm các phân lớp orbital (s, p, d, f) theo sau là số
+    // Capture group: ([spdf])(\d+)
+    const parts = text.split(/([spdf]\d+)/g);
+
+    return (
+        <>
+            {parts.map((part, index) => {
+                const match = part.match(/^([spdf])(\d+)$/);
+                if (match) {
+                    return (
+                        <span key={index}>
+                            {match[1]}<sup>{match[2]}</sup>
+                        </span>
+                    );
+                }
+                return part;
+            })}
+        </>
+    );
+};
 
 const ElementDetails: React.FC<ElementDetailsProps> = ({ element, onClose, onSave }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -359,8 +384,8 @@ const ElementDetails: React.FC<ElementDetailsProps> = ({ element, onClose, onSav
                                             <DetailItem label="Độ âm điện" value={element.electronegativityPauling} />
                                         </Section>
                                         <Section title="Cấu hình electron">
-                                            <DetailItem label="Cấu hình e (đầy đủ)" value={element.electronConfiguration} />
-                                            <DetailItem label="Lớp ngoài cùng" value={getOuterElectronConfiguration(element.electronConfiguration)} />
+                                            <DetailItem label="Cấu hình e (đầy đủ)" value={formatElectronConfiguration(element.electronConfiguration)} />
+                                            <DetailItem label="Lớp ngoài cùng" value={formatElectronConfiguration(getOuterElectronConfiguration(element.electronConfiguration))} />
                                         </Section>
                                     </div>
                                 </div>
@@ -474,7 +499,7 @@ const ElementDetails: React.FC<ElementDetailsProps> = ({ element, onClose, onSav
                                                     href={googleImageSearchUrl}
                                                     label="Tìm ảnh trên Google"
                                                     colorClass="bg-blue-600 hover:bg-blue-500"
-                                                    icon={<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2.917 16.083c-2.258 0-4.083-1.825-4.083-4.083s1.825-4.083 4.083-4.083c1.103 0 2.024.402 2.735 1.067l-1.107 1.068c-.304-.292-.834-.632-1.628-.632-1.394 0-2.528 1.157-2.528 2.58 0 1.423 1.134 2.579 2.528 2.579 1.616 0 2.224-1.162 2.316-1.762h-2.316v-1.4h3.855c.036.204.064.408.064.677.001 2.688-1.797 4.083-3.919 4.083zm6.917-6.083h-1.5v1.5h-1.5v-1.5h-1.5v-1.5h1.5v-1.5h1.5v1.5h1.5v1.5z"/></svg>}
+                                                    icon={<svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2.917 16.083c-2.258 0-4.083-1.825-4.083-4.083s1.825-4.083 4.083-4.083c1.103 0 2.024.402 2.735 1.067l-1.107 1.068c-.304-.292-.834-.632-1.628-.632-1.394 0-2.528 1.157-2.528 2.58 0 1.423 1.134 2.579 2.528 2.579 1.616 0 2.224-1.162 2.316-1.762h-2.316v-1.4h3.855c.036.204.064.408.064.677.001 2.688-1.797 4.083-3.919 4.083zm6.917-6.083h-1.5v1.5h-1.5v-1.5h-1.5v-1.5h1.5v-1.5h1.5v-1.5h1.5v1.5h1.5v1.5z"/></svg>}
                                                 />
                                             </div>
                                         )}
